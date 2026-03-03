@@ -1,10 +1,14 @@
 import type { FastifyInstance } from 'fastify';
 import prisma from '../../prisma.js';
 import { PHASE_MAP } from '../../utils/constants.js';
+import { getCurrentSeason } from '../../utils/season.js';
+
+type StatFields = 'fg2Miss' | 'fg2Made' | 'fg3Miss' | 'fg3Made' | 'ftMiss' | 'ftMade' | 'pts' | 'oreb' | 'dreb' | 'treb' | 'ast' | 'blk' | 'stl' | 'tov' | 'pf';
+type StatTotals = Record<StatFields, number>;
 
 export default async function boxscoreRoute(fastify: FastifyInstance) {
   fastify.get('/boxscore', async () => {
-    const season = await prisma.season.findFirst({ where: { isCurrent: true } });
+    const season = await getCurrentSeason();
     if (!season) return { season: 0, defaultIdx: 0, weeks: [] };
 
     const weeks = await prisma.week.findMany({
@@ -33,10 +37,11 @@ export default async function boxscoreRoute(fastify: FastifyInstance) {
           games: w.games.filter((g) => g.status === 'FINISHED').map((g) => {
             const homeStats = g.playerStats.filter((s) => s.isHome);
             const awayStats = g.playerStats.filter((s) => !s.isHome);
-            const sum = (arr: typeof homeStats) => arr.reduce(
+            const STAT_KEYS: StatFields[] = ['fg2Miss', 'fg2Made', 'fg3Miss', 'fg3Made', 'ftMiss', 'ftMade', 'pts', 'oreb', 'dreb', 'treb', 'ast', 'blk', 'stl', 'tov', 'pf'];
+            const sum = (arr: typeof homeStats): StatTotals => arr.reduce<StatTotals>(
               (acc, s) => {
-                for (const k of ['fg2Miss', 'fg2Made', 'fg3Miss', 'fg3Made', 'ftMiss', 'ftMade', 'pts', 'oreb', 'dreb', 'treb', 'ast', 'blk', 'stl', 'tov', 'pf'] as const)
-                  (acc as any)[k] += s[k];
+                for (const k of STAT_KEYS)
+                  acc[k] += s[k];
                 return acc;
               },
               { fg2Miss: 0, fg2Made: 0, fg3Miss: 0, fg3Made: 0, ftMiss: 0, ftMade: 0, pts: 0, oreb: 0, dreb: 0, treb: 0, ast: 0, blk: 0, stl: 0, tov: 0, pf: 0 }

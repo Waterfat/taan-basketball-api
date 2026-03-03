@@ -25,10 +25,10 @@ export async function create(data: { username: string; password: string; display
 }
 
 export async function update(id: number, data: Partial<{ displayName: string; role: Role; email: string; playerId: number; password: string }>) {
-  const updateData: any = { ...data };
-  if (data.password) {
-    updateData.passwordHash = await bcrypt.hash(data.password, 10);
-    delete updateData.password;
+  const { password, ...rest } = data;
+  const updateData: Omit<typeof rest, 'password'> & { passwordHash?: string } = { ...rest };
+  if (password) {
+    updateData.passwordHash = await bcrypt.hash(password, 10);
   }
   return prisma.user.update({
     where: { id },

@@ -2,10 +2,50 @@ import type { FastifyInstance } from 'fastify';
 import prisma from '../../prisma.js';
 import { PHASE_MAP, STATUS_MAP, DUTY_LABEL } from '../../utils/constants.js';
 import { formatDateSimple } from '../../utils/date.js';
+import { getCurrentSeason } from '../../utils/season.js';
+
+interface ScheduleMatchup {
+  combo: number;
+  home: string;
+  away: string;
+  homeScore: number | null;
+  awayScore: number | null;
+  status: string;
+}
+
+interface ScheduleGame {
+  num: number;
+  time: string;
+  home: string;
+  away: string;
+  homeScore: number | null;
+  awayScore: number | null;
+  status: string;
+  staff: Record<string, string[]>;
+}
+
+interface SuspendedWeek {
+  type: 'suspended';
+  date: string;
+  venue: string;
+  reason: string;
+}
+
+interface GameWeek {
+  type: 'game';
+  week: number;
+  date: string;
+  phase: string;
+  venue: string;
+  matchups: ScheduleMatchup[];
+  games: ScheduleGame[];
+}
+
+type ScheduleWeekEntry = SuspendedWeek | GameWeek;
 
 export default async function scheduleRoute(fastify: FastifyInstance) {
   fastify.get('/schedule', async () => {
-    const season = await prisma.season.findFirst({ where: { isCurrent: true } });
+    const season = await getCurrentSeason();
     if (!season) return { season: 0, currentWeek: 0, allWeeks: [], weeks: {} };
 
     const weeks = await prisma.week.findMany({
@@ -24,8 +64,8 @@ export default async function scheduleRoute(fastify: FastifyInstance) {
     });
 
     let currentWeek = 0;
-    const allWeeks: any[] = [];
-    const weeksMap: Record<string, any> = {};
+    const allWeeks: ScheduleWeekEntry[] = [];
+    const weeksMap: Record<string, GameWeek> = {};
 
     for (const w of weeks) {
       if (w.type === 'SUSPENDED') {
@@ -64,7 +104,7 @@ export default async function scheduleRoute(fastify: FastifyInstance) {
         };
       });
 
-      const weekData = {
+      const weekData: GameWeek = {
         type: 'game', week: w.weekNum, date: formatDateSimple(w.date),
         phase: PHASE_MAP[w.phase] ?? w.phase, venue: w.venue,
         matchups, games,

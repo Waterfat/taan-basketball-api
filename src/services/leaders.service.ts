@@ -1,10 +1,14 @@
 import prisma from '../prisma.js';
 
-interface LeaderEntry {
+export interface LeaderEntry {
   name: string;
   team: string;
   val: number;
-  [key: string]: any;
+  p2?: string;
+  p3?: string;
+  ft?: string;
+  off?: number;
+  def?: number;
 }
 
 export async function getBySeason(seasonId: number) {
@@ -13,7 +17,10 @@ export async function getBySeason(seasonId: number) {
     include: { playerSeason: { include: { player: true, teamSeason: { include: { team: true } } } } },
   });
 
-  const playerMap = new Map<number, { name: string; team: string; games: number; totals: Record<string, number> }>();
+  type StatKey = 'pts' | 'oreb' | 'dreb' | 'treb' | 'ast' | 'blk' | 'stl' | 'tov' | 'fg2Made' | 'fg2Miss' | 'fg3Made' | 'fg3Miss' | 'ftMade' | 'ftMiss';
+  const STAT_KEYS: StatKey[] = ['pts', 'oreb', 'dreb', 'treb', 'ast', 'blk', 'stl', 'tov', 'fg2Made', 'fg2Miss', 'fg3Made', 'fg3Miss', 'ftMade', 'ftMiss'];
+
+  const playerMap = new Map<number, { name: string; team: string; games: number; totals: Record<StatKey, number> }>();
 
   for (const s of stats) {
     const key = s.playerSeasonId;
@@ -24,8 +31,8 @@ export async function getBySeason(seasonId: number) {
       totals: { pts: 0, oreb: 0, dreb: 0, treb: 0, ast: 0, blk: 0, stl: 0, tov: 0, fg2Made: 0, fg2Miss: 0, fg3Made: 0, fg3Miss: 0, ftMade: 0, ftMiss: 0 },
     };
     entry.games++;
-    for (const k of Object.keys(entry.totals)) {
-      entry.totals[k] += (s as any)[k] ?? 0;
+    for (const k of STAT_KEYS) {
+      entry.totals[k] += s[k];
     }
     playerMap.set(key, entry);
   }

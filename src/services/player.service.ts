@@ -1,12 +1,14 @@
 import prisma from '../prisma.js';
+import type { Prisma } from '@prisma/client';
 
 export async function list(filters?: { teamId?: number; seasonId?: number; search?: string }) {
-  const where: any = {};
+  const where: Prisma.PlayerWhereInput = {};
   if (filters?.search) where.name = { contains: filters.search };
   if (filters?.teamId || filters?.seasonId) {
-    where.playerSeasons = { some: {} };
-    if (filters.teamId) where.playerSeasons.some.teamSeason = { teamId: filters.teamId };
-    if (filters.seasonId) where.playerSeasons.some.teamSeason = { ...where.playerSeasons.some.teamSeason, seasonId: filters.seasonId };
+    const teamSeasonFilter: Prisma.TeamSeasonWhereInput = {};
+    if (filters.teamId) teamSeasonFilter.teamId = filters.teamId;
+    if (filters.seasonId) teamSeasonFilter.seasonId = filters.seasonId;
+    where.playerSeasons = { some: { teamSeason: teamSeasonFilter } };
   }
   return prisma.player.findMany({
     where,

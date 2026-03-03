@@ -33,7 +33,7 @@ export default async function playerRoutes(fastify: FastifyInstance) {
   fastify.delete('/players/:id', { preHandler: [requireMinRole('ADMIN')] }, async (request) => {
     const { id } = request.params as { id: string };
     await svc.remove(+id);
-    return { success: true };
+    return ok({ deleted: true });
   });
 
   fastify.post('/players/:id/assign-team', { preHandler: [requireMinRole('ADMIN')] }, async (request) => {

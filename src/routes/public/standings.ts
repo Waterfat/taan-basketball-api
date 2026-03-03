@@ -1,10 +1,11 @@
 import type { FastifyInstance } from 'fastify';
 import prisma from '../../prisma.js';
 import { PHASE_MAP } from '../../utils/constants.js';
+import { getCurrentSeason } from '../../utils/season.js';
 
 export default async function standingsRoute(fastify: FastifyInstance) {
   fastify.get('/standings', async () => {
-    const season = await prisma.season.findFirst({ where: { isCurrent: true } });
+    const season = await getCurrentSeason();
     if (!season) return { season: 0, phase: '', currentWeek: 0, teams: [], matrix: { teams: [], results: [] } };
 
     const teamSeasons = await prisma.teamSeason.findMany({

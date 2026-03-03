@@ -1,9 +1,10 @@
 import type { FastifyInstance } from 'fastify';
 import prisma from '../../prisma.js';
+import { getCurrentSeason } from '../../utils/season.js';
 
 export default async function dragonRoute(fastify: FastifyInstance) {
   fastify.get('/dragon', async () => {
-    const season = await prisma.season.findFirst({ where: { isCurrent: true } });
+    const season = await getCurrentSeason();
     if (!season) return { season: 0, phase: '', civilianThreshold: 36, columns: [], players: [] };
 
     const scores = await prisma.dragonScore.findMany({

@@ -1,10 +1,11 @@
 import type { FastifyInstance } from 'fastify';
 import prisma from '../../prisma.js';
 import { DUTY_LABEL, DUTY_ICON, DUTY_TYPES } from '../../utils/constants.js';
+import { getCurrentSeason } from '../../utils/season.js';
 
 export default async function rotationRoute(fastify: FastifyInstance) {
   fastify.get('/rotation', async () => {
-    const season = await prisma.season.findFirst({ where: { isCurrent: true } });
+    const season = await getCurrentSeason();
     if (!season) return { season: 0, currentWeek: 0, attendance: {}, absentees: [], assignments: [], cumulativeRanking: [] };
 
     const latestWeek = await prisma.week.findFirst({

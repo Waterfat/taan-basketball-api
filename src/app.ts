@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import './types/index.js';
 import Fastify from 'fastify';
+import type { FastifyRequest, FastifyReply } from 'fastify';
 import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
 import { config } from './config.js';
@@ -35,7 +36,7 @@ await fastify.register(cors, {
 await fastify.register(jwt, { secret: config.jwt.secret, sign: { expiresIn: config.jwt.accessExpiresIn } });
 
 // Auth decorator (available to all child contexts)
-fastify.decorate('authenticate', async (request: any, reply: any) => {
+fastify.decorate('authenticate', async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     await request.jwtVerify();
   } catch {

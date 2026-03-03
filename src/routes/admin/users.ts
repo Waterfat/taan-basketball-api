@@ -32,6 +32,6 @@ export default async function userRoutes(fastify: FastifyInstance) {
   fastify.delete('/users/:id', async (request) => {
     const { id } = request.params as { id: string };
     await svc.remove(+id);
-    return { success: true };
+    return ok({ deleted: true });
   });
 }

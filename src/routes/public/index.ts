@@ -10,6 +10,10 @@ import statsRoute from './stats.js';
 import rotationRoute from './rotation.js';
 
 export default async function publicRoutes(fastify: FastifyInstance) {
+  fastify.addHook('onSend', async (_request, reply) => {
+    reply.header('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
+  });
+
   fastify.register(homeRoute);
   fastify.register(scheduleRoute);
   fastify.register(standingsRoute);

@@ -1,10 +1,10 @@
 import type { FastifyInstance } from 'fastify';
 import * as leadersSvc from '../../services/leaders.service.js';
-import prisma from '../../prisma.js';
+import { getCurrentSeason } from '../../utils/season.js';
 
 export default async function leadersRoute(fastify: FastifyInstance) {
   fastify.get('/leaders', async () => {
-    const season = await prisma.season.findFirst({ where: { isCurrent: true } });
+    const season = await getCurrentSeason();
     if (!season) return { leaders: { headers: [], rows: [] }, offense: { headers: [], rows: [] }, defense: { headers: [], rows: [] }, net: { headers: [], rows: [] } };
 
     const data = await leadersSvc.getBySeason(season.id);

@@ -1,11 +1,22 @@
 import type { FastifyInstance } from 'fastify';
 import prisma from '../../prisma.js';
 import * as leadersSvc from '../../services/leaders.service.js';
+import type { LeaderEntry } from '../../services/leaders.service.js';
+
+interface SeasonStats {
+  label: string;
+  scoring: LeaderEntry[];
+  rebound: LeaderEntry[];
+  assist: LeaderEntry[];
+  steal: LeaderEntry[];
+  block: LeaderEntry[];
+  eff: LeaderEntry[];
+}
 
 export default async function statsRoute(fastify: FastifyInstance) {
   fastify.get('/stats', async () => {
     const seasons = await prisma.season.findMany({ orderBy: { number: 'desc' } });
-    const result: Record<string, any> = {};
+    const result: Record<string, SeasonStats> = {};
 
     for (const season of seasons) {
       const data = await leadersSvc.getBySeason(season.id);

@@ -1,11 +1,12 @@
 import type { FastifyInstance } from 'fastify';
 import prisma from '../../prisma.js';
+import { getCurrentSeason } from '../../utils/season.js';
 
 const ATT_MAP: Record<string, number | string> = { PRESENT: 1, ABSENT: 0, AWOL: 'x', UNKNOWN: '?' };
 
 export default async function rosterRoute(fastify: FastifyInstance) {
   fastify.get('/roster', async () => {
-    const season = await prisma.season.findFirst({ where: { isCurrent: true } });
+    const season = await getCurrentSeason();
     if (!season) return { weeks: [], teams: [] };
 
     const weeks = await prisma.week.findMany({

@@ -29,6 +29,6 @@ export default async function announcementRoutes(fastify: FastifyInstance) {
   fastify.delete('/announcements/:id', { preHandler: [requireMinRole('ADMIN')] }, async (request) => {
     const { id } = request.params as { id: string };
     await svc.remove(+id);
-    return { success: true };
+    return ok({ deleted: true });
   });
 }

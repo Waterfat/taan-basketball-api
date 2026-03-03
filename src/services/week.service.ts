@@ -23,8 +23,9 @@ export async function create(data: { seasonId: number; weekNum: number; date: st
 }
 
 export async function update(id: number, data: Partial<{ date: string; phase: Phase; venue: string; type: WeekType; reason: string }>) {
-  const updateData: any = { ...data };
-  if (data.date) updateData.date = new Date(data.date);
+  const { date, ...rest } = data;
+  const updateData: typeof rest & { date?: Date } = { ...rest };
+  if (date) updateData.date = new Date(date);
   return prisma.week.update({ where: { id }, data: updateData });
 }
 

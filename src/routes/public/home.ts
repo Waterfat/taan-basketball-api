@@ -2,10 +2,11 @@ import type { FastifyInstance } from 'fastify';
 import prisma from '../../prisma.js';
 import { PHASE_MAP } from '../../utils/constants.js';
 import { formatDateWithDay } from '../../utils/date.js';
+import { getCurrentSeason } from '../../utils/season.js';
 
 export default async function homeRoute(fastify: FastifyInstance) {
   fastify.get('/home', async () => {
-    const season = await prisma.season.findFirst({ where: { isCurrent: true } });
+    const season = await getCurrentSeason();
     if (!season) return { season: 0, currentWeek: 0, phase: '', scheduleInfo: {}, standings: [], dragonTop10: [], miniStats: {} };
 
     // Latest week with finished games

@@ -1,8 +1,8 @@
 import prisma from '../prisma.js';
-import type { GameStatus } from '@prisma/client';
+import type { GameStatus, Prisma } from '@prisma/client';
 
 export async function list(filters?: { weekId?: number; seasonId?: number; status?: GameStatus }) {
-  const where: any = {};
+  const where: Prisma.GameWhereInput = {};
   if (filters?.weekId) where.weekId = filters.weekId;
   if (filters?.status) where.status = filters.status;
   if (filters?.seasonId) where.week = { seasonId: filters.seasonId };
