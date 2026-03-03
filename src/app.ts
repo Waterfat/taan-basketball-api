@@ -14,7 +14,23 @@ const fastify = Fastify({
 });
 
 // Plugins
-await fastify.register(cors, { origin: config.cors.origin, credentials: true });
+await fastify.register(cors, {
+  origin: (origin, cb) => {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return cb(null, true);
+    const allowed = [
+      'http://localhost:5174',
+      'http://localhost:8765',
+      'https://waterfat.github.io',
+    ];
+    // Also allow any trycloudflare.com subdomain
+    if (allowed.includes(origin) || origin.endsWith('.trycloudflare.com')) {
+      return cb(null, true);
+    }
+    cb(null, false);
+  },
+  credentials: true,
+});
 await fastify.register(jwt, { secret: config.jwt.secret, sign: { expiresIn: config.jwt.accessExpiresIn } });
 
 // Auth decorator (available to all child contexts)
