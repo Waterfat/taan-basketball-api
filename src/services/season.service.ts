@@ -25,7 +25,7 @@ export async function create(data: { number: number; name?: string; startDate?: 
 
 export async function update(id: number, data: { name?: string; startDate?: string; endDate?: string; isCurrent?: boolean }) {
   return prisma.$transaction(async (tx) => {
-    if (data.isCurrent) await tx.season.updateMany({ data: { isCurrent: false } });
+    if (data.isCurrent) await tx.season.updateMany({ where: { id: { not: id } }, data: { isCurrent: false } });
     return tx.season.update({
       where: { id },
       data: {

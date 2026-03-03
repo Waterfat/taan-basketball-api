@@ -1,6 +1,6 @@
 export function parsePagination(query: { page?: string; limit?: string }) {
-  const page = Math.max(1, parseInt(query.page || '1'));
-  const limit = Math.min(100, Math.max(1, parseInt(query.limit || '50')));
+  const page = Math.max(1, parseInt(query.page || '1') || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(query.limit || '50') || 50));
   const skip = (page - 1) * limit;
   return { page, limit, skip };
 }

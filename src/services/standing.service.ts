@@ -38,12 +38,12 @@ export async function recalculate(seasonId: number) {
     }))
     .sort((a, b) => b.pct - a.pct || b.wins - a.wins);
 
-  await prisma.standing.deleteMany({ where: { seasonId } });
-  await prisma.$transaction(
-    entries.map((e, i) =>
-      prisma.standing.create({ data: { seasonId, ...e, rank: i + 1 } })
-    )
-  );
+  await prisma.$transaction(async (tx) => {
+    await tx.standing.deleteMany({ where: { seasonId } });
+    for (let i = 0; i < entries.length; i++) {
+      await tx.standing.create({ data: { seasonId, ...entries[i], rank: i + 1 } });
+    }
+  });
 
   return entries;
 }
