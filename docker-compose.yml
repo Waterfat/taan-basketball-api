@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: taan-postgres
+    environment:
+      POSTGRES_USER: taan
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: taan_basketball
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taan -d taan_basketball"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: taan-api
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://taan:password@postgres:5432/taan_basketball
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-here}
+      JWT_ACCESS_EXPIRES_IN: 15m
+      JWT_REFRESH_EXPIRES_IN: 7d
+      PORT: 3000
+      HOST: 0.0.0.0
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8765}
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

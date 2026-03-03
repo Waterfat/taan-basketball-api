@@ -1,0 +1,289 @@
+// This is your Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==================== Enums ====================
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  TEAM_CAPTAIN
+  PLAYER
+  VIEWER
+}
+
+enum Phase {
+  PRESEASON
+  REGULAR
+  PLAYOFF
+}
+
+enum WeekType {
+  GAME
+  SUSPENDED
+}
+
+enum GameStatus {
+  UPCOMING
+  LIVE
+  FINISHED
+}
+
+enum AttStatus {
+  PRESENT
+  ABSENT
+  AWOL
+  UNKNOWN
+}
+
+enum DutyType {
+  REFEREE
+  COURT
+  PHOTO
+  EQUIPMENT
+  DATA
+}
+
+// ==================== User & Auth ====================
+
+model User {
+  id            Int            @id @default(autoincrement())
+  username      String         @unique
+  email         String?        @unique
+  passwordHash  String
+  displayName   String
+  role          Role           @default(VIEWER)
+  playerId      Int?           @unique
+  player        Player?        @relation(fields: [playerId], references: [id])
+  refreshTokens RefreshToken[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  lastLoginAt   DateTime?
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+// ==================== Season ====================
+
+model Season {
+  id           Int           @id @default(autoincrement())
+  number       Int           @unique
+  name         String?
+  startDate    DateTime?
+  endDate      DateTime?
+  isCurrent    Boolean       @default(false)
+  weeks        Week[]
+  teamSeasons  TeamSeason[]
+  standings    Standing[]
+  dragonScores DragonScore[]
+  createdAt    DateTime      @default(now())
+}
+
+// ==================== Team ====================
+
+model Team {
+  id          Int           @id @default(autoincrement())
+  code        String        @unique
+  name        String
+  shortName   String
+  color       String
+  barColor    String?
+  textColor   String?
+  teamSeasons TeamSeason[]
+  createdAt   DateTime      @default(now())
+}
+
+model TeamSeason {
+  id         Int            @id @default(autoincrement())
+  teamId     Int
+  team       Team           @relation(fields: [teamId], references: [id])
+  seasonId   Int
+  season     Season         @relation(fields: [seasonId], references: [id])
+  players    PlayerSeason[]
+  homeGames  Game[]         @relation("HomeTeam")
+  awayGames  Game[]         @relation("AwayTeam")
+
+  @@unique([teamId, seasonId])
+}
+
+// ==================== Player ====================
+
+model Player {
+  id            Int             @id @default(autoincrement())
+  name          String
+  avatarUrl     String?
+  phone         String?
+  isReferee     Boolean         @default(false)
+  user          User?
+  playerSeasons PlayerSeason[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model PlayerSeason {
+  id            Int              @id @default(autoincrement())
+  playerId      Int
+  player        Player           @relation(fields: [playerId], references: [id])
+  teamSeasonId  Int
+  teamSeason    TeamSeason       @relation(fields: [teamSeasonId], references: [id])
+  jerseyNumber  Int?
+  isCaptain     Boolean          @default(false)
+  attendance    Attendance[]
+  playerStats   PlayerGameStat[]
+  dragonScore   DragonScore?
+  dutyRecords   DutyRecord[]
+
+  @@unique([playerId, teamSeasonId])
+}
+
+// ==================== Schedule ====================
+
+model Week {
+  id         Int       @id @default(autoincrement())
+  seasonId   Int
+  season     Season    @relation(fields: [seasonId], references: [id])
+  weekNum    Int
+  date       DateTime
+  phase      Phase
+  venue      String
+  type       WeekType  @default(GAME)
+  reason     String?
+  games      Game[]
+  attendance Attendance[]
+
+  @@unique([seasonId, weekNum])
+}
+
+model Game {
+  id            Int              @id @default(autoincrement())
+  weekId        Int
+  week          Week             @relation(fields: [weekId], references: [id])
+  gameNum       Int
+  homeTeamId    Int
+  homeTeam      TeamSeason       @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeamId    Int
+  awayTeam      TeamSeason       @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  homeScore     Int?
+  awayScore     Int?
+  status        GameStatus       @default(UPCOMING)
+  scheduledTime String?
+  recorder      String?
+  playerStats   PlayerGameStat[]
+  duties        DutyRecord[]
+
+  @@unique([weekId, gameNum])
+}
+
+// ==================== Boxscore ====================
+
+model PlayerGameStat {
+  id              Int          @id @default(autoincrement())
+  gameId          Int
+  game            Game         @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  playerSeasonId  Int
+  playerSeason    PlayerSeason @relation(fields: [playerSeasonId], references: [id])
+  isHome          Boolean
+  played          Boolean      @default(true)
+  fg2Made         Int          @default(0)
+  fg2Miss         Int          @default(0)
+  fg3Made         Int          @default(0)
+  fg3Miss         Int          @default(0)
+  ftMade          Int          @default(0)
+  ftMiss          Int          @default(0)
+  pts             Int          @default(0)
+  oreb            Int          @default(0)
+  dreb            Int          @default(0)
+  treb            Int          @default(0)
+  ast             Int          @default(0)
+  blk             Int          @default(0)
+  stl             Int          @default(0)
+  tov             Int          @default(0)
+  pf              Int          @default(0)
+
+  @@unique([gameId, playerSeasonId])
+}
+
+// ==================== Attendance ====================
+
+model Attendance {
+  id              Int            @id @default(autoincrement())
+  weekId          Int
+  week            Week           @relation(fields: [weekId], references: [id])
+  playerSeasonId  Int
+  playerSeason    PlayerSeason   @relation(fields: [playerSeasonId], references: [id])
+  status          AttStatus      @default(UNKNOWN)
+
+  @@unique([weekId, playerSeasonId])
+}
+
+// ==================== Duty ====================
+
+model DutyRecord {
+  id              Int            @id @default(autoincrement())
+  gameId          Int
+  game            Game           @relation(fields: [gameId], references: [id])
+  playerSeasonId  Int
+  playerSeason    PlayerSeason   @relation(fields: [playerSeasonId], references: [id])
+  dutyType        DutyType
+
+  @@unique([gameId, playerSeasonId, dutyType])
+}
+
+// ==================== Dragon Score ====================
+
+model DragonScore {
+  id              Int            @id @default(autoincrement())
+  seasonId        Int
+  season          Season         @relation(fields: [seasonId], references: [id])
+  playerSeasonId  Int @unique
+  playerSeason    PlayerSeason   @relation(fields: [playerSeasonId], references: [id])
+  attPoints       Int            @default(0)
+  dutyPoints      Int            @default(0)
+  mopPoints       Int            @default(0)
+  playoffPoints   Int?
+  totalPoints     Int            @default(0)
+
+  @@unique([seasonId, playerSeasonId])
+}
+
+// ==================== Standing ====================
+
+model Standing {
+  id              Int          @id @default(autoincrement())
+  seasonId        Int
+  season          Season       @relation(fields: [seasonId], references: [id])
+  teamSeasonId    Int
+  wins            Int          @default(0)
+  losses          Int          @default(0)
+  pct             Float        @default(0)
+  streak          Int          @default(0)
+  rank            Int?
+
+  @@unique([seasonId, teamSeasonId])
+}
+
+// ==================== Announcement ====================
+
+model Announcement {
+  id          Int      @id @default(autoincrement())
+  title       String
+  content     String
+  authorId    Int
+  isPinned    Boolean  @default(false)
+  publishedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
