@@ -1,8 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import prisma from '../../prisma.js';
-
-const DUTY_LABEL: Record<string, string> = { REFEREE: '裁判', COURT: '場務', PHOTO: '攝影', EQUIPMENT: '器材', DATA: '數據' };
-const DUTY_ICON: Record<string, string> = { REFEREE: '⚖️', COURT: '🏃', PHOTO: '📸', EQUIPMENT: '🔧', DATA: '📊' };
+import { DUTY_LABEL, DUTY_ICON, DUTY_TYPES } from '../../utils/constants.js';
 
 export default async function rotationRoute(fastify: FastifyInstance) {
   fastify.get('/rotation', async () => {
@@ -42,7 +40,7 @@ export default async function rotationRoute(fastify: FastifyInstance) {
       byType.set(d.dutyType, list);
     }
 
-    const assignments = ['REFEREE', 'COURT', 'PHOTO', 'EQUIPMENT', 'DATA']
+    const assignments = DUTY_TYPES
       .map((type) => ({
         role: DUTY_LABEL[type] ?? type,
         icon: DUTY_ICON[type] ?? '',

@@ -1,8 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import prisma from '../../prisma.js';
-
-const PHASE_MAP: Record<string, string> = { PRESEASON: '熱身賽', REGULAR: '例行賽', PLAYOFF: '季後賽' };
-const STATUS_MAP: Record<string, string> = { FINISHED: 'finished', UPCOMING: 'upcoming', LIVE: 'live' };
+import { PHASE_MAP, STATUS_MAP, DUTY_LABEL } from '../../utils/constants.js';
 
 export default async function scheduleRoute(fastify: FastifyInstance) {
   fastify.get('/schedule', async () => {
@@ -49,7 +47,7 @@ export default async function scheduleRoute(fastify: FastifyInstance) {
       const games = w.games.map((g) => {
         const staff: Record<string, string[]> = {};
         for (const d of g.duties) {
-          const roleName = dutyLabel(d.dutyType);
+          const roleName = DUTY_LABEL[d.dutyType] ?? d.dutyType;
           const playerLabel = `${d.playerSeason.player.name}(${d.playerSeason.teamSeason.team.shortName})`;
           (staff[roleName] ??= []).push(playerLabel);
         }
@@ -83,7 +81,3 @@ function formatDate(d: Date): string {
   return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
 }
 
-function dutyLabel(type: string): string {
-  const map: Record<string, string> = { REFEREE: '裁判', COURT: '場務', PHOTO: '攝影', EQUIPMENT: '器材', DATA: '數據' };
-  return map[type] ?? type;
-}

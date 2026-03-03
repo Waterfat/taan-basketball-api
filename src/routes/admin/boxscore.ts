@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { requireMinRole } from '../../utils/rbac.js';
+import { NotFoundError } from '../../utils/errors.js';
 import * as svc from '../../services/boxscore.service.js';
 
 export default async function boxscoreRoutes(fastify: FastifyInstance) {
@@ -14,10 +15,10 @@ export default async function boxscoreRoutes(fastify: FastifyInstance) {
     return { success: true, data: await svc.batchUpsert(+gameId, stats) };
   });
 
-  fastify.patch('/boxscore/:id', { preHandler: [requireMinRole('ADMIN')] }, async (request, reply) => {
+  fastify.patch('/boxscore/:id', { preHandler: [requireMinRole('ADMIN')] }, async (request) => {
     const { id } = request.params as { id: string };
     const result = await svc.updateStat(+id, request.body as any);
-    if (!result) return reply.status(404).send({ error: 'Stat not found' });
+    if (!result) throw new NotFoundError('Stat');
     return { success: true, data: result };
   });
 }

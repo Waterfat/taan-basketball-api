@@ -5,6 +5,7 @@ import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
 import { config } from './config.js';
 import prisma from './prisma.js';
+import { AppError } from './utils/errors.js';
 import authRoutes from './routes/auth.js';
 import publicRoutes from './routes/public/index.js';
 import adminRoutes from './routes/admin/index.js';
@@ -44,8 +45,12 @@ fastify.decorate('authenticate', async (request: any, reply: any) => {
 
 // Error handler
 fastify.setErrorHandler(async (error, request, reply) => {
-  if ('statusCode' in error && typeof error.statusCode === 'number' && error.statusCode < 500) {
+  if (error instanceof AppError) {
     return reply.status(error.statusCode).send({ error: error.message });
+  }
+  const err = error as { statusCode?: number; message?: string };
+  if (typeof err.statusCode === 'number' && err.statusCode < 500) {
+    return reply.status(err.statusCode).send({ error: err.message ?? 'Error' });
   }
   request.log.error(error);
   return reply.status(500).send({ error: 'Internal server error' });

@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { requireMinRole } from '../../utils/rbac.js';
+import { NotFoundError } from '../../utils/errors.js';
 import * as svc from '../../services/player.service.js';
 
 export default async function playerRoutes(fastify: FastifyInstance) {
@@ -9,10 +10,10 @@ export default async function playerRoutes(fastify: FastifyInstance) {
     return { success: true, data };
   });
 
-  fastify.get('/players/:id', async (request, reply) => {
+  fastify.get('/players/:id', async (request) => {
     const { id } = request.params as { id: string };
     const player = await svc.getById(+id);
-    if (!player) return reply.status(404).send({ error: 'Player not found' });
+    if (!player) throw new NotFoundError('Player');
     return { success: true, data: player };
   });
 

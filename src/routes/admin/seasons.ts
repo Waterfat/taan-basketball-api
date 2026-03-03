@@ -1,14 +1,15 @@
 import type { FastifyInstance } from 'fastify';
 import { requireMinRole } from '../../utils/rbac.js';
+import { NotFoundError } from '../../utils/errors.js';
 import * as svc from '../../services/season.service.js';
 
 export default async function seasonRoutes(fastify: FastifyInstance) {
   fastify.get('/seasons', async () => ({ success: true, data: await svc.list() }));
 
-  fastify.get('/seasons/:id', async (request, reply) => {
+  fastify.get('/seasons/:id', async (request) => {
     const { id } = request.params as { id: string };
     const season = await svc.getById(+id);
-    if (!season) return reply.status(404).send({ error: 'Season not found' });
+    if (!season) throw new NotFoundError('Season');
     return { success: true, data: season };
   });
 

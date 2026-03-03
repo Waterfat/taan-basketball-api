@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { requireMinRole } from '../../utils/rbac.js';
+import { NotFoundError } from '../../utils/errors.js';
 import * as svc from '../../services/game.service.js';
 
 export default async function gameRoutes(fastify: FastifyInstance) {
@@ -9,10 +10,10 @@ export default async function gameRoutes(fastify: FastifyInstance) {
     return { success: true, data };
   });
 
-  fastify.get('/games/:id', async (request, reply) => {
+  fastify.get('/games/:id', async (request) => {
     const { id } = request.params as { id: string };
     const game = await svc.getById(+id);
-    if (!game) return reply.status(404).send({ error: 'Game not found' });
+    if (!game) throw new NotFoundError('Game');
     return { success: true, data: game };
   });
 

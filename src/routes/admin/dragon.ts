@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { requireMinRole } from '../../utils/rbac.js';
+import { NotFoundError } from '../../utils/errors.js';
 import * as svc from '../../services/dragon.service.js';
 
 export default async function dragonRoutes(fastify: FastifyInstance) {
@@ -13,10 +14,10 @@ export default async function dragonRoutes(fastify: FastifyInstance) {
     return { success: true, data: await svc.recalculate(seasonId) };
   });
 
-  fastify.patch('/dragon/:id', { preHandler: [requireMinRole('ADMIN')] }, async (request, reply) => {
+  fastify.patch('/dragon/:id', { preHandler: [requireMinRole('ADMIN')] }, async (request) => {
     const { id } = request.params as { id: string };
     const result = await svc.manualAdjust(+id, request.body as any);
-    if (!result) return reply.status(404).send({ error: 'DragonScore not found' });
+    if (!result) throw new NotFoundError('DragonScore');
     return { success: true, data: result };
   });
 }

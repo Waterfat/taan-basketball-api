@@ -14,15 +14,17 @@ export async function recalculate(seasonId: number) {
     include: { players: { include: { attendance: true, dutyRecords: true } } },
   });
 
+  // Batch load all existing DragonScores for O(1) lookup (fixes N+1)
+  const existingScores = await prisma.dragonScore.findMany({ where: { seasonId } });
+  const scoreMap = new Map(existingScores.map((s) => [s.playerSeasonId, s]));
+
   const ops = [];
   for (const ts of teamSeasons) {
     for (const ps of ts.players) {
       const attPoints = ps.attendance.filter((a) => a.status === 'PRESENT').length;
       const dutyPoints = ps.dutyRecords.length;
 
-      const existing = await prisma.dragonScore.findUnique({
-        where: { seasonId_playerSeasonId: { seasonId, playerSeasonId: ps.id } },
-      });
+      const existing = scoreMap.get(ps.id);
       const mopPoints = existing?.mopPoints ?? 0;
       const playoffPoints = existing?.playoffPoints ?? null;
       const totalPoints = attPoints + dutyPoints + mopPoints + (playoffPoints ?? 0);

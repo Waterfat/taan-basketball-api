@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { requireMinRole } from '../../utils/rbac.js';
+import { NotFoundError } from '../../utils/errors.js';
 import * as svc from '../../services/user.service.js';
 
 export default async function userRoutes(fastify: FastifyInstance) {
@@ -8,10 +9,10 @@ export default async function userRoutes(fastify: FastifyInstance) {
 
   fastify.get('/users', async () => ({ success: true, data: await svc.list() }));
 
-  fastify.get('/users/:id', async (request, reply) => {
+  fastify.get('/users/:id', async (request) => {
     const { id } = request.params as { id: string };
     const user = await svc.getById(+id);
-    if (!user) return reply.status(404).send({ error: 'User not found' });
+    if (!user) throw new NotFoundError('User');
     return { success: true, data: user };
   });
 

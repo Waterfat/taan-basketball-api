@@ -1,14 +1,15 @@
 import type { FastifyInstance } from 'fastify';
 import { requireMinRole } from '../../utils/rbac.js';
+import { NotFoundError } from '../../utils/errors.js';
 import * as svc from '../../services/announcement.service.js';
 
 export default async function announcementRoutes(fastify: FastifyInstance) {
   fastify.get('/announcements', async () => ({ success: true, data: await svc.list() }));
 
-  fastify.get('/announcements/:id', async (request, reply) => {
+  fastify.get('/announcements/:id', async (request) => {
     const { id } = request.params as { id: string };
     const item = await svc.getById(+id);
-    if (!item) return reply.status(404).send({ error: 'Announcement not found' });
+    if (!item) throw new NotFoundError('Announcement');
     return { success: true, data: item };
   });
 

@@ -185,6 +185,7 @@ model Game {
   duties        DutyRecord[]
 
   @@unique([weekId, gameNum])
+  @@index([weekId])
 }
 
 // ==================== Boxscore ====================
@@ -214,6 +215,8 @@ model PlayerGameStat {
   pf              Int          @default(0)
 
   @@unique([gameId, playerSeasonId])
+  @@index([gameId])
+  @@index([playerSeasonId])
 }
 
 // ==================== Attendance ====================
@@ -227,6 +230,8 @@ model Attendance {
   status          AttStatus      @default(UNKNOWN)
 
   @@unique([weekId, playerSeasonId])
+  @@index([weekId])
+  @@index([playerSeasonId])
 }
 
 // ==================== Duty ====================
@@ -240,6 +245,8 @@ model DutyRecord {
   dutyType        DutyType
 
   @@unique([gameId, playerSeasonId, dutyType])
+  @@index([gameId])
+  @@index([playerSeasonId])
 }
 
 // ==================== Dragon Score ====================
@@ -257,6 +264,8 @@ model DragonScore {
   totalPoints     Int            @default(0)
 
   @@unique([seasonId, playerSeasonId])
+  @@index([seasonId])
+  @@index([playerSeasonId])
 }
 
 // ==================== Standing ====================

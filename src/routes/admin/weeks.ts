@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { requireMinRole } from '../../utils/rbac.js';
+import { NotFoundError } from '../../utils/errors.js';
 import * as svc from '../../services/week.service.js';
 
 export default async function weekRoutes(fastify: FastifyInstance) {
@@ -8,10 +9,10 @@ export default async function weekRoutes(fastify: FastifyInstance) {
     return { success: true, data: await svc.list(+seasonId) };
   });
 
-  fastify.get('/weeks/:id', async (request, reply) => {
+  fastify.get('/weeks/:id', async (request) => {
     const { id } = request.params as { id: string };
     const week = await svc.getById(+id);
-    if (!week) return reply.status(404).send({ error: 'Week not found' });
+    if (!week) throw new NotFoundError('Week');
     return { success: true, data: week };
   });
 

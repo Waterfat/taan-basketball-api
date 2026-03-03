@@ -1,7 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import prisma from '../../prisma.js';
-
-const PHASE_MAP: Record<string, string> = { PRESEASON: '熱身賽', REGULAR: '例行賽', PLAYOFF: '季後賽' };
+import { PHASE_MAP } from '../../utils/constants.js';
 
 export default async function homeRoute(fastify: FastifyInstance) {
   fastify.get('/home', async () => {

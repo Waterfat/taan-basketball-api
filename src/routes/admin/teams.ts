@@ -1,14 +1,15 @@
 import type { FastifyInstance } from 'fastify';
 import { requireMinRole } from '../../utils/rbac.js';
+import { NotFoundError } from '../../utils/errors.js';
 import * as svc from '../../services/team.service.js';
 
 export default async function teamRoutes(fastify: FastifyInstance) {
   fastify.get('/teams', async () => ({ success: true, data: await svc.list() }));
 
-  fastify.get('/teams/:id', async (request, reply) => {
+  fastify.get('/teams/:id', async (request) => {
     const { id } = request.params as { id: string };
     const team = await svc.getById(+id);
-    if (!team) return reply.status(404).send({ error: 'Team not found' });
+    if (!team) throw new NotFoundError('Team');
     return { success: true, data: team };
   });
 
