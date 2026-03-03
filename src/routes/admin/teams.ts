@@ -1,29 +1,33 @@
 import type { FastifyInstance } from 'fastify';
 import { requireMinRole } from '../../utils/rbac.js';
 import { NotFoundError } from '../../utils/errors.js';
+import { ok } from '../../utils/response.js';
+import { CreateTeamSchema, UpdateTeamSchema } from '../../schemas/index.js';
 import * as svc from '../../services/team.service.js';
 
 export default async function teamRoutes(fastify: FastifyInstance) {
-  fastify.get('/teams', async () => ({ success: true, data: await svc.list() }));
+  fastify.get('/teams', async () => ok(await svc.list()));
 
   fastify.get('/teams/:id', async (request) => {
     const { id } = request.params as { id: string };
     const team = await svc.getById(+id);
     if (!team) throw new NotFoundError('Team');
-    return { success: true, data: team };
+    return ok(team);
   });
 
   fastify.post('/teams', { preHandler: [requireMinRole('SUPER_ADMIN')] }, async (request) => {
-    return { success: true, data: await svc.create(request.body as any) };
+    const data = CreateTeamSchema.parse(request.body);
+    return ok(await svc.create(data));
   });
 
   fastify.patch('/teams/:id', { preHandler: [requireMinRole('SUPER_ADMIN')] }, async (request) => {
     const { id } = request.params as { id: string };
-    return { success: true, data: await svc.update(+id, request.body as any) };
+    const data = UpdateTeamSchema.parse(request.body);
+    return ok(await svc.update(+id, data));
   });
 
   fastify.post('/teams/:teamId/seasons/:seasonId', { preHandler: [requireMinRole('SUPER_ADMIN')] }, async (request) => {
     const { teamId, seasonId } = request.params as { teamId: string; seasonId: string };
-    return { success: true, data: await svc.ensureTeamSeason(+teamId, +seasonId) };
+    return ok(await svc.ensureTeamSeason(+teamId, +seasonId));
   });
 }

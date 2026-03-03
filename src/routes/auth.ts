@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import prisma from '../prisma.js';
+import { ok } from '../utils/response.js';
 import * as authService from '../services/auth.service.js';
 
 export default async function authRoutes(fastify: FastifyInstance) {
@@ -37,6 +38,6 @@ export default async function authRoutes(fastify: FastifyInstance) {
       where: { id: request.user.userId },
       select: { id: true, username: true, displayName: true, role: true, email: true, playerId: true },
     });
-    return { success: true, data: user };
+    return ok(user);
   });
 }

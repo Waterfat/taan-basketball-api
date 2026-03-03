@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import prisma from '../../prisma.js';
 import { PHASE_MAP, STATUS_MAP, DUTY_LABEL } from '../../utils/constants.js';
+import { formatDateSimple } from '../../utils/date.js';
 
 export default async function scheduleRoute(fastify: FastifyInstance) {
   fastify.get('/schedule', async () => {
@@ -28,7 +29,7 @@ export default async function scheduleRoute(fastify: FastifyInstance) {
 
     for (const w of weeks) {
       if (w.type === 'SUSPENDED') {
-        allWeeks.push({ type: 'suspended', date: formatDate(w.date), venue: w.venue, reason: w.reason ?? '' });
+        allWeeks.push({ type: 'suspended', date: formatDateSimple(w.date), venue: w.venue, reason: w.reason ?? '' });
         continue;
       }
 
@@ -64,7 +65,7 @@ export default async function scheduleRoute(fastify: FastifyInstance) {
       });
 
       const weekData = {
-        type: 'game', week: w.weekNum, date: formatDate(w.date),
+        type: 'game', week: w.weekNum, date: formatDateSimple(w.date),
         phase: PHASE_MAP[w.phase] ?? w.phase, venue: w.venue,
         matchups, games,
       };
@@ -76,8 +77,3 @@ export default async function scheduleRoute(fastify: FastifyInstance) {
     return { season: season.number, currentWeek, allWeeks, weeks: weeksMap };
   });
 }
-
-function formatDate(d: Date): string {
-  return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
-}
-

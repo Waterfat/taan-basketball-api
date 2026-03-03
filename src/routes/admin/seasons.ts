@@ -1,25 +1,28 @@
 import type { FastifyInstance } from 'fastify';
 import { requireMinRole } from '../../utils/rbac.js';
 import { NotFoundError } from '../../utils/errors.js';
+import { ok } from '../../utils/response.js';
+import { CreateSeasonSchema, UpdateSeasonSchema } from '../../schemas/index.js';
 import * as svc from '../../services/season.service.js';
 
 export default async function seasonRoutes(fastify: FastifyInstance) {
-  fastify.get('/seasons', async () => ({ success: true, data: await svc.list() }));
+  fastify.get('/seasons', async () => ok(await svc.list()));
 
   fastify.get('/seasons/:id', async (request) => {
     const { id } = request.params as { id: string };
     const season = await svc.getById(+id);
     if (!season) throw new NotFoundError('Season');
-    return { success: true, data: season };
+    return ok(season);
   });
 
   fastify.post('/seasons', { preHandler: [requireMinRole('SUPER_ADMIN')] }, async (request) => {
-    const data = request.body as any;
-    return { success: true, data: await svc.create(data) };
+    const data = CreateSeasonSchema.parse(request.body);
+    return ok(await svc.create(data));
   });
 
   fastify.patch('/seasons/:id', { preHandler: [requireMinRole('SUPER_ADMIN')] }, async (request) => {
     const { id } = request.params as { id: string };
-    return { success: true, data: await svc.update(+id, request.body as any) };
+    const data = UpdateSeasonSchema.parse(request.body);
+    return ok(await svc.update(+id, data));
   });
 }

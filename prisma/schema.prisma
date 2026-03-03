@@ -186,6 +186,7 @@ model Game {
 
   @@unique([weekId, gameNum])
   @@index([weekId])
+  @@index([weekId, status])
 }
 
 // ==================== Boxscore ====================

@@ -14,7 +14,7 @@ export function requireMinRole(minRole: Role) {
     const userLevel = ROLE_LEVEL[request.user.role] || 0;
     const requiredLevel = ROLE_LEVEL[minRole] || 0;
     if (userLevel < requiredLevel) {
-      reply.status(403).send({ error: 'Forbidden' });
+      return reply.status(403).send({ error: 'Forbidden' });
     }
   };
 }

@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import prisma from '../../prisma.js';
 import { PHASE_MAP } from '../../utils/constants.js';
+import { formatDateWithDay } from '../../utils/date.js';
 
 export default async function homeRoute(fastify: FastifyInstance) {
   fastify.get('/home', async () => {
@@ -69,7 +70,7 @@ export default async function homeRoute(fastify: FastifyInstance) {
       currentWeek: latestWeek?.weekNum ?? 0,
       phase: latestWeek ? PHASE_MAP[latestWeek.phase] ?? latestWeek.phase : '',
       scheduleInfo: nextWeek ? {
-        date: formatDate(nextWeek.date),
+        date: formatDateWithDay(nextWeek.date),
         venue: nextWeek.venue ? `${nextWeek.venue}體育館` : '',
       } : {},
       standings: standingsData,
@@ -77,9 +78,4 @@ export default async function homeRoute(fastify: FastifyInstance) {
       miniStats: {}, // computed from leaders if needed
     };
   });
-}
-
-function formatDate(d: Date): string {
-  const days = ['日', '一', '二', '三', '四', '五', '六'];
-  return `${d.getFullYear()} / ${d.getMonth() + 1} / ${d.getDate()}（${days[d.getDay()]}）07:30`;
 }

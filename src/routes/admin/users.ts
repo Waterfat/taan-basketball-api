@@ -1,28 +1,32 @@
 import type { FastifyInstance } from 'fastify';
 import { requireMinRole } from '../../utils/rbac.js';
 import { NotFoundError } from '../../utils/errors.js';
+import { ok } from '../../utils/response.js';
+import { CreateUserSchema, UpdateUserSchema } from '../../schemas/index.js';
 import * as svc from '../../services/user.service.js';
 
 export default async function userRoutes(fastify: FastifyInstance) {
   // All user management routes require SUPER_ADMIN
   fastify.addHook('onRequest', requireMinRole('SUPER_ADMIN'));
 
-  fastify.get('/users', async () => ({ success: true, data: await svc.list() }));
+  fastify.get('/users', async () => ok(await svc.list()));
 
   fastify.get('/users/:id', async (request) => {
     const { id } = request.params as { id: string };
     const user = await svc.getById(+id);
     if (!user) throw new NotFoundError('User');
-    return { success: true, data: user };
+    return ok(user);
   });
 
   fastify.post('/users', async (request) => {
-    return { success: true, data: await svc.create(request.body as any) };
+    const data = CreateUserSchema.parse(request.body);
+    return ok(await svc.create(data));
   });
 
   fastify.patch('/users/:id', async (request) => {
     const { id } = request.params as { id: string };
-    return { success: true, data: await svc.update(+id, request.body as any) };
+    const data = UpdateUserSchema.parse(request.body);
+    return ok(await svc.update(+id, data));
   });
 
   fastify.delete('/users/:id', async (request) => {

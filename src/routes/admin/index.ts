@@ -17,7 +17,7 @@ export default async function adminRoutes(fastify: FastifyInstance) {
     try {
       await request.jwtVerify();
     } catch {
-      reply.status(401).send({ error: 'Unauthorized' });
+      return reply.status(401).send({ error: 'Unauthorized' });
     }
   });
 

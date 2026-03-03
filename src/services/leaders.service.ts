@@ -37,34 +37,52 @@ export async function getBySeason(seasonId: number) {
     return att > 0 ? `${((made / att) * 100).toFixed(1)}%` : '-';
   };
 
-  const scoring: LeaderEntry[] = players
-    .map((p) => ({
+  // Single pass: compute all category entries at once
+  const scoring: LeaderEntry[] = [];
+  const rebound: LeaderEntry[] = [];
+  const assist: LeaderEntry[] = [];
+  const steal: LeaderEntry[] = [];
+  const block: LeaderEntry[] = [];
+  const eff: LeaderEntry[] = [];
+
+  for (const p of players) {
+    const t = p.totals;
+    const gp = p.games;
+
+    scoring.push({
       name: p.name, team: p.team,
-      val: avg(p.totals.pts, p.games),
-      p2: pct(p.totals.fg2Made, p.totals.fg2Miss),
-      p3: pct(p.totals.fg3Made, p.totals.fg3Miss),
-      ft: pct(p.totals.ftMade, p.totals.ftMiss),
-    }))
-    .sort((a, b) => b.val - a.val);
+      val: avg(t.pts, gp),
+      p2: pct(t.fg2Made, t.fg2Miss),
+      p3: pct(t.fg3Made, t.fg3Miss),
+      ft: pct(t.ftMade, t.ftMiss),
+    });
 
-  const rebound: LeaderEntry[] = players
-    .map((p) => ({ name: p.name, team: p.team, val: avg(p.totals.treb, p.games), off: avg(p.totals.oreb, p.games), def: avg(p.totals.dreb, p.games) }))
-    .sort((a, b) => b.val - a.val);
+    rebound.push({
+      name: p.name, team: p.team,
+      val: avg(t.treb, gp),
+      off: avg(t.oreb, gp),
+      def: avg(t.dreb, gp),
+    });
 
-  const assist: LeaderEntry[] = players.map((p) => ({ name: p.name, team: p.team, val: avg(p.totals.ast, p.games) })).sort((a, b) => b.val - a.val);
-  const steal: LeaderEntry[] = players.map((p) => ({ name: p.name, team: p.team, val: avg(p.totals.stl, p.games) })).sort((a, b) => b.val - a.val);
-  const block: LeaderEntry[] = players.map((p) => ({ name: p.name, team: p.team, val: avg(p.totals.blk, p.games) })).sort((a, b) => b.val - a.val);
+    assist.push({ name: p.name, team: p.team, val: avg(t.ast, gp) });
+    steal.push({ name: p.name, team: p.team, val: avg(t.stl, gp) });
+    block.push({ name: p.name, team: p.team, val: avg(t.blk, gp) });
 
-  const eff: LeaderEntry[] = players
-    .map((p) => {
-      const t = p.totals;
-      const fga = t.fg2Made + t.fg2Miss + t.fg3Made + t.fg3Miss;
-      const fgm = t.fg2Made + t.fg3Made;
-      const fta = t.ftMade + t.ftMiss;
-      const effVal = (t.pts + t.treb + t.ast + t.stl + t.blk - (fga - fgm) - (fta - t.ftMade) - t.tov) / p.games;
-      return { name: p.name, team: p.team, val: Math.round(effVal * 100) / 100 };
-    })
-    .sort((a, b) => b.val - a.val);
+    const fga = t.fg2Made + t.fg2Miss + t.fg3Made + t.fg3Miss;
+    const fgm = t.fg2Made + t.fg3Made;
+    const fta = t.ftMade + t.ftMiss;
+    const effVal = (t.pts + t.treb + t.ast + t.stl + t.blk - (fga - fgm) - (fta - t.ftMade) - t.tov) / gp;
+    eff.push({ name: p.name, team: p.team, val: Math.round(effVal * 100) / 100 });
+  }
+
+  // Sort each category descending by val
+  const desc = (a: LeaderEntry, b: LeaderEntry) => b.val - a.val;
+  scoring.sort(desc);
+  rebound.sort(desc);
+  assist.sort(desc);
+  steal.sort(desc);
+  block.sort(desc);
+  eff.sort(desc);
 
   return { scoring, rebound, assist, steal, block, eff };
 }

@@ -9,28 +9,32 @@ export async function getById(id: number) {
 }
 
 export async function create(data: { number: number; name?: string; startDate?: string; endDate?: string; isCurrent?: boolean }) {
-  if (data.isCurrent) await prisma.season.updateMany({ data: { isCurrent: false } });
-  return prisma.season.create({
-    data: {
-      number: data.number,
-      name: data.name,
-      startDate: data.startDate ? new Date(data.startDate) : undefined,
-      endDate: data.endDate ? new Date(data.endDate) : undefined,
-      isCurrent: data.isCurrent ?? false,
-    },
+  return prisma.$transaction(async (tx) => {
+    if (data.isCurrent) await tx.season.updateMany({ data: { isCurrent: false } });
+    return tx.season.create({
+      data: {
+        number: data.number,
+        name: data.name,
+        startDate: data.startDate ? new Date(data.startDate) : undefined,
+        endDate: data.endDate ? new Date(data.endDate) : undefined,
+        isCurrent: data.isCurrent ?? false,
+      },
+    });
   });
 }
 
 export async function update(id: number, data: { name?: string; startDate?: string; endDate?: string; isCurrent?: boolean }) {
-  if (data.isCurrent) await prisma.season.updateMany({ data: { isCurrent: false } });
-  return prisma.season.update({
-    where: { id },
-    data: {
-      name: data.name,
-      startDate: data.startDate ? new Date(data.startDate) : undefined,
-      endDate: data.endDate ? new Date(data.endDate) : undefined,
-      isCurrent: data.isCurrent,
-    },
+  return prisma.$transaction(async (tx) => {
+    if (data.isCurrent) await tx.season.updateMany({ data: { isCurrent: false } });
+    return tx.season.update({
+      where: { id },
+      data: {
+        name: data.name,
+        startDate: data.startDate ? new Date(data.startDate) : undefined,
+        endDate: data.endDate ? new Date(data.endDate) : undefined,
+        isCurrent: data.isCurrent,
+      },
+    });
   });
 }
 
